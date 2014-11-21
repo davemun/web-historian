@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
+var httpHelper = require('../web/http-helpers.js');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -25,13 +26,34 @@ exports.initialize = function(pathsObj){
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-exports.readListOfUrls = function(){
+exports.readListOfUrls = function(callback){
+  fs.readFile("./archives/sites.txt", function(err, data){
+     if(err)throw err;
+     callback( JSON.parse( data.toString() ) );
+  });
 };
 
-exports.isUrlInList = function(){
+exports.isUrlInList = function(urlInQuestion, callback){
+  exports.readListOfUrls(function(objectListUrls){
+    console.log(objectListUrls[urlInQuestion] === urlInQuestion+'\n');
+    callback( objectListUrls[urlInQuestion] === urlInQuestion+'\n' );
+  });
 };
 
-exports.addUrlToList = function(){
+exports.addUrlToList = function(url, req, res){
+  exports.readListOfUrls(function(urlSiteList){
+    urlSiteList[url] = url + '\n';
+    var jsonVersion = JSON.stringify( urlSiteList );
+    fs.writeFile("./archives/sites.txt", jsonVersion, function(){
+
+      //302 code lets the browser know it's a redirect and to look for the key 'location'
+      httpHelper.headers['location'] = 'archiving.html';
+      console.log("res object BEFORE:"+JSON.stringify(res));
+      res.writeHead(302, 'OK', httpHelper.headers );
+      console.log("res objectAFTER:"+JSON.stringify(res));
+      res.end();
+    });
+  });
 };
 
 exports.isURLArchived = function(){
@@ -39,3 +61,28 @@ exports.isURLArchived = function(){
 
 exports.downloadUrls = function(){
 };
+
+
+exports.sendArchive = function(pageToSend, req, res){
+
+  exports.isUrlInList(pageToSend, function(bool){
+    if(bool){
+      console.log("pageToSend: "+pageToSend);
+      httpHelper.sendFile({filePath:pageToSend, contType:'text/html'}, req, res);
+    }else{
+
+      //we dont have page and need to fetch it, and add to list and then send it
+      exports.addUrlToList( pageToSend, req, res );
+
+    }
+  })
+
+
+};
+
+
+
+
+
+
+

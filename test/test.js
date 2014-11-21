@@ -53,11 +53,12 @@ describe("Node Server Request Listener Function", function() {
   });
 
   it("Should append submitted sites to 'sites.txt'", function(done) {
-    var url = "www.example.com";
+    var url = "www.exampleDave.com";
     var req = new stubs.Request("/", "POST", {url: url});
 
     // Reset the test file and process request
-    fs.writeFileSync(archive.paths.list, "");
+    console.log("TEHREADFILE::::"+fs.readFileSync(archive.paths.list, 'utf8') );
+    fs.writeFileSync(archive.paths.list, "{}");
     handler.handleRequest(req, res);
 
     waitForThen(
@@ -65,7 +66,13 @@ describe("Node Server Request Listener Function", function() {
       function(){
         var fileContents = fs.readFileSync(archive.paths.list, 'utf8');
         expect(res._responseCode).to.equal(302);
+        console.log("FILECONTENTS!!:::: "+ fileContents);
+        console.log("FILECONTENTS!!:::: "+ fileContents);
+        console.log("FILECONTENTS!!:::: "+ fileContents);
         expect(fileContents).to.equal(url + "\n");
+        console.log("FILECONTENTS!!:::: "+ fileContents);
+        console.log("FILECONTENTS!!:::: "+ fileContents);
+        console.log("FILECONTENTS!!:::: "+ fileContents);
         done();
     });
   });
